@@ -104,6 +104,12 @@ public:
         return newnx;
     }
 };
+void initdata(string filename,unsigned int size,float * p){
+    fstream file(filename);
+    for (unsigned int i=0; i<size; i++) {
+        file>>p[i];
+    }
+}
 //
 //int main(int argc, const char * argv[]) {
 //    // insert code here...
