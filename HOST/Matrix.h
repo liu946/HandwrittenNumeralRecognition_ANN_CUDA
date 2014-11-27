@@ -18,40 +18,40 @@ template<typename T>
  [i][j]元素
  map
  
-*/
+ */
 
 class Matrix {
     int row=0;
-    int cal=0;
+    int col=0;
     T * dataptr=NULL;
 public:
     Matrix(){}
-    Matrix(T * _dataptr,int _row,int _cal){
-        dataptr=_dataptr;row=_row;cal=_cal;
+    Matrix(T * _dataptr,int _row,int _col){
+        dataptr=_dataptr;row=_row;col=_col;
     }
     Matrix(const Matrix & x){
         row=x.row;
-        cal=x.cal;
-        dataptr=new T[row*cal];
-        for (int i=0; i<row*cal; i++) {
+        col=x.col;
+        dataptr=new T[row*col];
+        for (int i=0; i<row*col; i++) {
             dataptr[i]=x.dataptr[i];
         }
     }
     ~Matrix(){
-        cout<<"~"<<dataptr<<endl;
+        //  cout<<"~"<<dataptr<<endl;
         delete[] dataptr;
     }
     Matrix operator*(Matrix & mx2){
         
-        if (cal!=mx2.row) {
-            string err("1 Matrix cal != 2 Matrix row");
+        if (col!=mx2.row) {
+            string err("1 Matrix col != 2 Matrix row");
             throw err;
         }
-        Matrix newnx(new T[row*mx2.cal],row,mx2.cal);
+        Matrix newnx(new T[row*mx2.col],row,mx2.col);
         for (int i=0; i<newnx.row; i++) {
-            for (int j=0; j<newnx.cal; j++) {
+            for (int j=0; j<newnx.col; j++) {
                 newnx[i][j]=0;
-                for (int k=0; k<cal; k++) {
+                for (int k=0; k<col; k++) {
                     newnx[i][j]+= (*this)[i][k] * mx2[k][j];
                 }
             }
@@ -63,20 +63,29 @@ public:
             string err("on index of calling row");
             throw err;
         }
-        return dataptr + cal*rowindex;
+        return dataptr + col*rowindex;
     }
     void printMatrix(){
         for (int i=0; i<row; i++) {
-            for (int j=0; j<cal; j++) {
+            cout<<"\n\n"<<i<<"\n\n";
+            for (int j=0; j<col; j++) {
                 cout<<(*this)[i][j]<<" ";
             }
             cout<<endl;
         }
     }
+    void print5x5(){
+        for (int i=0; i<row&&i<5; i++) {
+            for (int j=0; j<col&&j<5; j++) {
+                cout<<(*this)[i][j]<<"\t";
+            }
+            cout<<endl;
+        }
+    }
     Matrix operator~(){
-        Matrix newnx(new T[row*cal],cal,row);
+        Matrix newnx(new T[row*col],col,row);
         for (int i=0; i<newnx.row; i++) {
-            for (int j=0; j<newnx.cal; j++) {
+            for (int j=0; j<newnx.col; j++) {
                 newnx[i][j]=(*this)[j][i];
             }
         }
@@ -84,10 +93,10 @@ public:
         return newnx;
     }
     Matrix map(function<T (T)>func){
-        Matrix newnx(new T[row*cal],cal,row);
+        Matrix newnx(new T[row*col],col,row);
         for (int i=0; i<newnx.row; i++) {
-            for (int j=0; j<newnx.cal; j++) {
-
+            for (int j=0; j<newnx.col; j++) {
+                
                 newnx[i][j] = func((*this)[i][j]);
                 
             }
