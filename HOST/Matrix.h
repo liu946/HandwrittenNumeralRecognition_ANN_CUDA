@@ -10,6 +10,8 @@
 #define MATRIX_H
 #include <iostream>
 #include <string>
+#include <cmath>
+#include <fstream>
 using namespace std;
 template<typename T>
 /*
@@ -17,7 +19,6 @@ template<typename T>
  ~转置
  [i][j]元素
  map
- 
  */
 
 class Matrix {
@@ -74,9 +75,9 @@ public:
             cout<<endl;
         }
     }
-    void print5x5(){
-        for (int i=0; i<row&&i<5; i++) {
-            for (int j=0; j<col&&j<5; j++) {
+    void print5x5(unsigned int startr=0,unsigned int startc=0){
+        for (unsigned int i=startr; i<row&&i<5+startr; i++) {
+            for (unsigned int j=startc; j<col&&j<5+startc; j++) {
                 cout<<(*this)[i][j]<<"\t";
             }
             cout<<endl;
@@ -109,23 +110,37 @@ void initdata(string filename,unsigned int size,float * p){
     for (unsigned int i=0; i<size; i++) {
         file>>p[i];
     }
+    file.close();
 }
-//
+#define theta1r 25
+#define theta1c 401
+#define theta2r 10
+#define theta2c 26
+#define Xr 5000
+#define Xc 400
+#define Yr 5000
+#define Yc 1
 //int main(int argc, const char * argv[]) {
 //    // insert code here...
-//    int *a=new int[2];
-//    int *b=new int[2];
-//    *a=1;
-//    *(a+1)=2;
-//    *b=2;
-//    *(b+1)=3;
+//    float * theta1ptr=new float[theta1r*theta1c];
+//    float * theta2ptr=new float[theta2r*theta2c];
+//    float * xptr=new float[Xr*Xc];
+//    float * yptr=new float[Yr*Yc];
+//    initdata("Theta1.dat", theta1r*theta1c, theta1ptr);
+//    initdata("Theta2.dat", theta2r*theta2c, theta2ptr);
+//    initdata("X.dat", Xr*Xc, xptr);
+//    initdata("Y.dat", Yr*Yc, yptr);
+//    Matrix<float> Theta1(theta1ptr,theta1r,theta1c);
+//    Matrix<float> Theta2(theta2ptr,theta2r,theta2c);
+//    Matrix<float> X(xptr,Xr,Xc);
+//    Matrix<float> Y(yptr,Yr,Yc);
+//    Theta1.print5x5();
+//    Theta2.print5x5();
+//    X.print5x5(100,150);
+//    Y.print5x5();
 //    
-//    Matrix<int> ax(a,2,1);
-//    Matrix<int> bx(b,1,2);
-//    Matrix<int> cx=(ax*bx).map([=](int x){
-//        return x;
-//    });
-//    cx.printMatrix();
+//    
 //    return 0;
 //}
+
 #endif
