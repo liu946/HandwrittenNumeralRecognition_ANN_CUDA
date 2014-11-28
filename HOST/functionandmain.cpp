@@ -57,17 +57,19 @@ Matrix<int> predict(Matrix<float> Theta1, Matrix<float> Theta2, Matrix<float> X)
     
     for (int i = 0; i<m; i++) {
         Matrix<float> z2 = (X2.subr(i, i + 1)*_theta1);
-        Matrix<float> _z2= z2.map([&](float x, int, int){
+        Matrix<float> z21 = z2.map([&](float x, int, int){
             return sigmoid(x);
         });
-        Matrix<float> z2_(new float[(_z2.col + 1)*_z2.row], _z2.row, _z2.col + 1);
-        Matrix<float> z2__ = z2_.map([&](float, int row, int col){
-            return col == 0 ? 1.0 : z2_[row][col];
+        Matrix<float> z22(new float[(z21.col + 1)*z21.row], z21.row, z21.col + 1);
+        Matrix<float> z23 = z22.map([&](float, int row, int col){
+            return col == 0 ? 1.0 : z21[row][col-1];
         });
-        Matrix<float> z2___ = (z2__*_theta2).map([&](float x, int, int){
+        
+        Matrix<float> z24 = (z23*_theta2).map([&](float x, int, int){
             return sigmoid(x);
         });
-        p[i] = maxindex(z2___[0], z2___.col);
+        p[i] = maxindex(z24[0], z24.col);
+
     }
     return Matrix<int>( p,m,1);
 }
