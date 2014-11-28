@@ -13,29 +13,32 @@
 #include <cmath>
 #include <fstream>
 using namespace std;
-template<typename T>
+
 /*
  *矩阵乘法
  ~转置
  [i][j]元素
  map
+ subr，subc取子阵
  */
-
+template<typename T>
 class Matrix {
-    int row=0;
-    int col=0;
-    T * dataptr=NULL;
+    
+    T * dataptr;
 public:
-    Matrix(){}
-    Matrix(T * _dataptr,int _row,int _col){
-        dataptr=_dataptr;row=_row;col=_col;
+    int row;
+    int col;
+    
+    Matrix(T * _dataptr, int _row, int _col){
+        
+        dataptr = _dataptr; row = _row; col = _col;
     }
     Matrix(const Matrix & x){
-        row=x.row;
-        col=x.col;
-        dataptr=new T[row*col];
-        for (int i=0; i<row*col; i++) {
-            dataptr[i]=x.dataptr[i];
+        row = x.row;
+        col = x.col;
+        dataptr = new T[row*col];
+        for (int i = 0; i<row*col; i++) {
+            dataptr[i] = x.dataptr[i];
         }
     }
     ~Matrix(){
@@ -44,67 +47,110 @@ public:
     }
     Matrix operator*(Matrix & mx2){
         
-        if (col!=mx2.row) {
+        if (col != mx2.row) {
             string err("1 Matrix col != 2 Matrix row");
             throw err;
         }
-        Matrix newnx(new T[row*mx2.col],row,mx2.col);
-        for (int i=0; i<newnx.row; i++) {
-            for (int j=0; j<newnx.col; j++) {
-                newnx[i][j]=0;
-                for (int k=0; k<col; k++) {
-                    newnx[i][j]+= (*this)[i][k] * mx2[k][j];
+        Matrix newnx(new T[row*mx2.col], row, mx2.col);
+        for (int i = 0; i<newnx.row; i++) {
+            for (int j = 0; j<newnx.col; j++) {
+                newnx[i][j] = 0;
+                for (int k = 0; k<col; k++) {
+                    newnx[i][j] += (*this)[i][k] * mx2[k][j];
                 }
             }
         }
         return newnx;
     }
     T * operator[](int rowindex){
-        if (rowindex>=row) {
+        if (rowindex >= row) {
             string err("on index of calling row");
             throw err;
         }
         return dataptr + col*rowindex;
     }
     void printMatrix(){
-        for (int i=0; i<row; i++) {
-            cout<<"\n\n"<<i<<"\n\n";
-            for (int j=0; j<col; j++) {
-                cout<<(*this)[i][j]<<" ";
+        for (int i = 0; i<row; i++) {
+            cout << "\n\n" << i << "\n\n";
+            for (int j = 0; j<col; j++) {
+                cout << (*this)[i][j] << " ";
             }
-            cout<<endl;
+            cout << endl;
         }
     }
-    void print5x5(unsigned int startr=0,unsigned int startc=0){
-        for (unsigned int i=startr; i<row&&i<5+startr; i++) {
-            for (unsigned int j=startc; j<col&&j<5+startc; j++) {
-                cout<<(*this)[i][j]<<"\t";
+    void print5x5(unsigned int startr = 0, unsigned int startc = 0){
+        for (unsigned int i = startr; i<row&&i<5 + startr; i++) {
+            for (unsigned int j = startc; j<col&&j<5 + startc; j++) {
+                cout << (*this)[i][j] << "\t";
             }
-            cout<<endl;
+            cout << endl;
         }
     }
     Matrix operator~(){
-        Matrix newnx(new T[row*col],col,row);
-        for (int i=0; i<newnx.row; i++) {
-            for (int j=0; j<newnx.col; j++) {
-                newnx[i][j]=(*this)[j][i];
+        Matrix newnx(new T[row*col], col, row);
+        for (int i = 0; i<newnx.row; i++) {
+            for (int j = 0; j<newnx.col; j++) {
+                newnx[i][j] = (*this)[j][i];
             }
         }
         //cout<<newnx->dataptr<<endl;
         return newnx;
     }
-    Matrix map(function<T (T)>func){
-        Matrix newnx(new T[row*col],col,row);
-        for (int i=0; i<newnx.row; i++) {
-            for (int j=0; j<newnx.col; j++) {
+    Matrix map(function<T(T, int row, int col)>func){
+        T * p = new T[row*col];
+        Matrix newnx(p, row, col);
+        for (int i = 0; i<newnx.row; i++) {
+            for (int j = 0; j<newnx.col; j++) {
                 
-                newnx[i][j] = func((*this)[i][j]);
+                
+                newnx[i][j] = func((*this)[i][j], i, j);
                 
             }
         }
         return newnx;
     }
+    //
+    //  M.subr(0,M.row); "equal to `M.subr(-1,-1);`"return the whole matrix
+    //  M.subr(0,1); return the first row;
+    //
+    Matrix subr(int startr, int stopr){
+        if (stopr <= 0 || stopr>row) stopr = row;
+        if (startr<0 || startr >= row)startr = 0;
+        if (startr >= stopr) {
+            string err("startrow > stoprow");
+        }
+        Matrix newnx(new T[(stopr - startr)*col], stopr - startr, col);
+        //注意，不能在map里面使用this指针
+        for (int i = 0; i < stopr - startr; i++)
+        {
+            for (int j = 0; j < col; j++)
+            {
+                newnx[i][j] = (*this)[i + startr][j];
+            }
+        }
+        
+        return newnx;
+    }
+    Matrix subc(int startc, int stopc){
+        if (stopc <= 0 || stopc>col) stopc = col;
+        if (startc<0 || startc >= col)startc = 0;
+        if (startc >= stopc) {
+            string err("startcol > stopcol");
+        }
+        Matrix newnx(new T[(stopc - startc)*col], stopc - startc, col);
+        //注意，不能在map里面使用this指针
+        for (int i = 0; i < row; i++)
+        {
+            for (int j = 0; j < stopc-startc; j++)
+            {
+                newnx[i][j] = (*this)[i][j+startc];
+            }
+        }
+        
+        return newnx;
+    }
 };
+
 void initdata(string filename,unsigned int size,float * p){
     fstream file(filename);
     for (unsigned int i=0; i<size; i++) {
