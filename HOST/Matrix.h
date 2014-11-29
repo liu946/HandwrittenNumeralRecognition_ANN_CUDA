@@ -112,6 +112,7 @@ public:
     //
     //  M.subr(0,M.row); "equal to `M.subr(-1,-1);`"return the whole matrix
     //  M.subr(0,1); return the first row;
+    //  this function return a matrix.
     //
     Matrix subr(int startr, int stopr){
         if (stopr <= 0 || stopr>row) stopr = row;

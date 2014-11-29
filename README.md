@@ -19,3 +19,22 @@ Handwritten numeral recognition project using BP ANN with CPU &amp; GPU (CUDA).
 	end
 
 ```
+* map函数加了索引参数。用法如下：
+
+```
+	Matrix<float> _X2(new float[X.row*(1 + X.col)], X.row, X.col + 1);
+	Matrix<float> X2 = _X2.map([&](float, int row, int col){
+        return col>0 ? X[row][col - 1] : 1.0f;
+    });
+	//利用此方法也可以给矩阵添加一列1.0，也可以先留一下，之后也会添加矩阵拼接方法，方便使用。
+```
+
+* subr、subc函数按行列取子阵。
+
+```
+	//
+    //  M.subr(0,M.row); "equal to `M.subr(-1,-1);`"return the whole matrix
+    //  M.subr(0,1); return the first row;
+    //  this function return a matrix.
+    //
+```
