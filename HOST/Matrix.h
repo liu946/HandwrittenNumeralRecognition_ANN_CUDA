@@ -150,6 +150,40 @@ public:
         
         return newnx;
     }
+    Matrix rightlink(Matrix & A){
+        if (A.row!=row) {
+            string err("1.row != 2.row");
+            throw err;
+        }
+        int ncol=A.col+col;
+        T * p =new T[row*ncol];
+        for (int i=0; i<row; i++) {
+            for (int j=0; j<ncol;j++) {
+                p[i*ncol+j]= j<col? (*this)[i][j]:A[i][j];
+            }
+        }
+        return Matrix(p,row,ncol);
+    }
+    Matrix underlink(Matrix & A){
+        if (A.col!=col) {
+            string err("1.col != 2.col");
+            throw err;
+        }
+        int nrow=A.row+row;
+        T * p =new T[nrow*col];
+        int i=0;
+        while (i<row*col) {
+            p[i]=(*this)[0][i];
+            i++;
+        }
+        int j=0;
+        while (i<nrow*col) {
+            p[i]=A[0][j];
+            i++,j++;
+        }
+        return Matrix(p,nrow,col);
+    }
+
 };
 
 void initdata(string filename,unsigned int size,float * p){

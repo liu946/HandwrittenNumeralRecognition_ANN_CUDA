@@ -38,3 +38,6 @@ Handwritten numeral recognition project using BP ANN with CPU &amp; GPU (CUDA).
     //  this function return a matrix.
     //
 ```
+
+* Matrix rightlink(Matrix A) 将A拼在this右侧，行数相同
+* Matrix underlink(Matrix & A) 将A拼在this下侧，列数相同
