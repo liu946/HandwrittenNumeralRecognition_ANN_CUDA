@@ -41,3 +41,8 @@ Handwritten numeral recognition project using BP ANN with CPU &amp; GPU (CUDA).
 
 * Matrix rightlink(Matrix A) 将A拼在this右侧，行数相同
 * Matrix underlink(Matrix & A) 将A拼在this下侧，列数相同
+
+
+* 提供两个矩阵快速构造方法：
+	* Matrix(T data,int _row,int _col) 初始化一个全为data的矩阵
+	* Matrix(int _row,int _col) 构造一个没有初始化过的矩阵

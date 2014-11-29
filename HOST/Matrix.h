@@ -33,6 +33,15 @@ public:
         
         dataptr = _dataptr; row = _row; col = _col;
     }
+    Matrix(T data,int _row,int _col){
+        dataptr = new T[_row*_col]; row = _row; col = _col;
+        for (int i=0; i<row*col; i++) {
+            dataptr[i]=data;
+        }
+    }
+    Matrix(int _row,int _col){
+        dataptr = new T[_row*_col]; row = _row; col = _col;
+    }
     Matrix(const Matrix & x){
         row = x.row;
         col = x.col;
