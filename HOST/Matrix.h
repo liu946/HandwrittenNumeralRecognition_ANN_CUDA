@@ -128,6 +128,7 @@ public:
         if (startr<0 || startr >= row)startr = 0;
         if (startr >= stopr) {
             string err("startrow > stoprow");
+            throw err;
         }
         Matrix newnx(new T[(stopr - startr)*col], stopr - startr, col);
         //注意，不能在map里面使用this指针
@@ -146,6 +147,7 @@ public:
         if (startc<0 || startc >= col)startc = 0;
         if (startc >= stopc) {
             string err("startcol > stopcol");
+            throw err;
         }
         Matrix newnx(new T[(stopc - startc)*col], stopc - startc, col);
         //注意，不能在map里面使用this指针

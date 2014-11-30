@@ -45,4 +45,5 @@ Handwritten numeral recognition project using BP ANN with CPU &amp; GPU (CUDA).
 
 * 提供两个矩阵快速构造方法：
 	* Matrix(T data,int _row,int _col) 初始化一个全为data的矩阵
+		- `配合拼接方法可以快速加行列`
 	* Matrix(int _row,int _col) 构造一个没有初始化过的矩阵
