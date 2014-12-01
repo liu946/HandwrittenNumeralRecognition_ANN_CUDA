@@ -88,15 +88,18 @@ int nnCostFunction(M nn_params, int input_layer_size, int hidden_layer_size, int
 	M Theta1_part = Theta1.subc(2,-1);
 	M Theta2_part = Theta2.subc(2,-1);
 
-	M y_matrix = new M(SAMPLE_NUM, num_lables);
+	M y_matrix(SAMPLE_NUM, num_lables);
 	y_matrix = y_matrix.map([=](DT _, int r, int c){
 		return y[r]==c;
 	});
 
-	M a1 = (new M((DT)1,SAMPLE_NUM,1)).rightlink(X);
+	M temp1((DT)1,SAMPLE_NUM,1);
+	M a1 = temp1.rightlink(X);
 	M z2 = a1 * ~Theta1;
 	M a2 = z2.map(sigmoid<DT>);
-	a2 = (new M((DT)1,a2.row,1)).rightlink(X);
+
+	M temp2((DT)1,a2.row,1);
+	a2 = temp2.rightlink(X);
 	M z3 = a2 * ~Theta2;
 	a3 = z3.map(sigmoid<DT>);
 	//这里要不要用指针？
@@ -119,10 +122,13 @@ int nnCostFunction(M nn_params, int input_layer_size, int hidden_layer_size, int
 	}));
 
 	//J = sum(a*(b-c))+d*(e+f);
-	J = Matrix_inner_sum<DT>(Matrix_elementary_multiply<DT>(Matrix_elementary_minus<DT>(b,c),new M(a,y_matrix.row,y_matrix.col))) + d*(e+f);
+	M temp3(a,y_matrix.row,y_matrix.col);
+	J = Matrix_inner_sum<DT>(Matrix_elementary_multiply<DT>(Matrix_elementary_minus<DT>(b,c),temp3)) + d*(e+f);
 
 	M d3 = Matrix_elementary_minus<DT>(a3, y_matrix);
-	M d2 = Matrix_elementary_multiply<DT>(d3 * Theta2_part, z2.map(sigmoidGradient<DT>));
+
+	M temp4 = d3 * Theta2_part
+	M d2 = Matrix_elementary_multiply<DT>(temp4, z2.map(sigmoidGradient<DT>));
 	M delta2 = (~d3)*a2;
 	M delta1 = (~d2)*a1;
 	M Theta1_grad = delta1.map([=](DT x){return x / SAMPLE_NUM;});
@@ -143,7 +149,9 @@ int nnCostFunction(M nn_params, int input_layer_size, int hidden_layer_size, int
 	Theta1_grad = Matrix_elementary_add<DT>(Theta1_grad,reg1);
 	Theta2_grad = Matrix_elementary_add<DT>(Theta2_grad,reg2);
 
-	grad = vectorize_col(Theta1_grad).underlink(vectorize_col(Theta2_grad));
+	M temp5 = vectorize_col(Theta1_grad);
+	M temp6 = vectorize_col(Theta2_grad);
+	grad = temp5.underlink(tmep6);
 
 	return 0;
 }
