@@ -57,26 +57,35 @@ Matrix<int> predict(Matrix<float> Theta1, Matrix<float> Theta2, Matrix<float> X)
 
 
 int main(int argc, const char * argv[]) {
-    // insert code here...
-    float * theta1ptr = new float[theta1r*theta1c];
-    float * theta2ptr = new float[theta2r*theta2c];
+    //     insert code here...
+    //    float * theta1ptr = new float[theta1r*theta1c];
+    //    float * theta2ptr = new float[theta2r*theta2c];
     float * xptr = new float[Xr*Xc];
     int * yptr = new int[Yr*Yc];
-    initdata("Theta1.dat", theta1r*theta1c, theta1ptr);
-    initdata("Theta2.dat", theta2r*theta2c, theta2ptr);
-    initdata("X.dat", Xr*Xc, xptr);
+    //    initdata("Theta1.dat", theta1r*theta1c, theta1ptr);
+    //    initdata("Theta2.dat", theta2r*theta2c, theta2ptr);
+    initdata("X2.dat", Xr*Xc, xptr);
     initdata<int>("Y.dat", Yr*Yc, yptr);
-    Matrix<float> Theta1(theta1ptr, theta1r, theta1c);
-    Matrix<float> Theta2(theta2ptr, theta2r, theta2c);
+    //    Matrix<float> Theta1(theta1ptr, theta1r, theta1c);
+    //    Matrix<float> Theta2(theta2ptr, theta2r, theta2c);
     Matrix<float> X(xptr, Xr, Xc);
     Matrix<int> Y(yptr, Yr, Yc);
+    //Theta1.print5x5();
+    //Theta2.print5x5();
+    //    cout<<"\n\n\n";
+    //    X.print5x5(1500, 150);
+    //    Y.print5x5();
+    //    Matrix<int> YY = predict(Theta1, Theta2, X);
+    //    YY.printtofile();
+    Matrix<float>pa(0.12f, theta1r*theta1c+theta2r*theta2c, 1);
+    float cost;
+    gradientDescent(pa, 1, cost, X, Y);
+    pa.printMatrix();
+    cout<<"!!!!!"<<endl;
+    cout<<cost<<"!!!!!!!!!"<<endl;
+    M Theta1 = pa.subr(0,theta1r*theta1c);
+    Theta1.row = theta1r;
+    Theta1.col = theta1c;
     Theta1.print5x5();
-    Theta2.print5x5();
-    X.print5x5(100, 150);
-    Y.print5x5();
-    Matrix<int> YY = predict(Theta1, Theta2, X);
-    YY.print5x5();
-    //YY.printMatrix();
-    
     return 0;
 }

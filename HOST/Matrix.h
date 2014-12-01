@@ -13,35 +13,32 @@
 #include <cmath>
 #include <fstream>
 using namespace std;
-
-/*
- *矩阵乘法
- ~转置
- [i][j]元素
- map
- subr，subc取子阵
- */
 template<typename T>
 class Matrix {
-    
     T * dataptr;
+    
 public:
+    
     int row;
     int col;
-    
+    Matrix(){}
     Matrix(T * _dataptr, int _row, int _col){
         
         dataptr = _dataptr; row = _row; col = _col;
+        
     }
     Matrix(T data,int _row,int _col){
         dataptr = new T[_row*_col]; row = _row; col = _col;
         for (int i=0; i<row*col; i++) {
             dataptr[i]=data;
         }
+        
     }
     Matrix(int _row,int _col){
         dataptr = new T[_row*_col]; row = _row; col = _col;
+        
     }
+    
     Matrix(const Matrix & x){
         row = x.row;
         col = x.col;
@@ -49,9 +46,12 @@ public:
         for (int i = 0; i<row*col; i++) {
             dataptr[i] = x.dataptr[i];
         }
+        
     }
     ~Matrix(){
-        //  cout<<"~"<<dataptr<<endl;
+        // cout<<"~"<<dataptr<<endl;
+        //str.deletenode(str.find(dataptr));
+        con--;
         delete[] dataptr;
     }
     Matrix operator*(Matrix & mx2){
@@ -118,17 +118,26 @@ public:
         }
         return newnx;
     }
+    void changemap(function<T(T, int row, int col)>func){
+        for (int i = 0; i<row; i++) {
+            for (int j = 0; j<col; j++) {
+                
+                
+                (*this)[i][j] = func((*this)[i][j], i, j);
+                
+            }
+        }
+        return ;
+    }
     //
     //  M.subr(0,M.row); "equal to `M.subr(-1,-1);`"return the whole matrix
     //  M.subr(0,1); return the first row;
-    //  this function return a matrix.
     //
     Matrix subr(int startr, int stopr){
         if (stopr <= 0 || stopr>row) stopr = row;
         if (startr<0 || startr >= row)startr = 0;
         if (startr >= stopr) {
             string err("startrow > stoprow");
-            throw err;
         }
         Matrix newnx(new T[(stopr - startr)*col], stopr - startr, col);
         //注意，不能在map里面使用this指针
@@ -147,9 +156,8 @@ public:
         if (startc<0 || startc >= col)startc = 0;
         if (startc >= stopc) {
             string err("startcol > stopcol");
-            throw err;
         }
-        Matrix newnx(new T[(stopc - startc)*col], stopc - startc, col);
+        Matrix newnx(new T[(stopc - startc)*col],row , stopc - startc);
         //注意，不能在map里面使用this指针
         for (int i = 0; i < row; i++)
         {
@@ -161,19 +169,30 @@ public:
         
         return newnx;
     }
+    void printtofile(){
+        fstream file("Y1.txt",ios::out);
+        for (int i = 0; i<row; i++) {
+            for (int j = 0; j<col; j++) {
+                file << (*this)[i][j] << " ";
+            }
+            file << endl;
+        }
+        file.close();
+    }
     Matrix rightlink(Matrix & A){
         if (A.row!=row) {
             string err("1.row != 2.row");
             throw err;
         }
         int ncol=A.col+col;
-        T * p =new T[row*ncol];
+        Matrix anx =Matrix<T>( new T[row*ncol],row,ncol);
         for (int i=0; i<row; i++) {
             for (int j=0; j<ncol;j++) {
-                p[i*ncol+j]= j<col? (*this)[i][j]:A[i][j];
+                anx[i][j]= j<col? (*this)[i][j]:A[i][j-col];
             }
         }
-        return Matrix(p,row,ncol);
+        
+        return anx;
     }
     Matrix underlink(Matrix & A){
         if (A.col!=col) {
@@ -194,9 +213,11 @@ public:
         }
         return Matrix(p,nrow,col);
     }
-
+    Matrix copyM(Matrix x){
+        return x;
+    }
+    
 };
-
 void initdata(string filename,unsigned int size,float * p){
     fstream file(filename);
     for (unsigned int i=0; i<size; i++) {
