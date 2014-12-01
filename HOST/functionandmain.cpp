@@ -45,33 +45,14 @@ int maxindex(float * p, int len) {
 
 Matrix<int> predict(Matrix<float> Theta1, Matrix<float> Theta2, Matrix<float> X){
     int * p=new int[X.row];
-    int m = X.row;
-    //int num_lables = Theta2.row;
-    Matrix<float> _X2(new float[X.row*(1 + X.col)], X.row, X.col + 1);
     Matrix<float> _theta1 = ~Theta1;
     Matrix<float> _theta2 = ~Theta2;
-    Matrix<float> X2 = _X2.map([&](float, int row, int col){
-        return col>0 ? X[row][col - 1] : 1.0f;
-    });
-    
-    
-    for (int i = 0; i<m; i++) {
-        Matrix<float> z2 = (X2.subr(i, i + 1)*_theta1);
-        Matrix<float> z21 = z2.map([&](float x, int, int){
-            return sigmoid(x);
-        });
-        Matrix<float> z22(new float[(z21.col + 1)*z21.row], z21.row, z21.col + 1);
-        Matrix<float> z23 = z22.map([&](float, int row, int col){
-            return col == 0 ? 1.0 : z21[row][col-1];
-        });
-        
-        Matrix<float> z24 = (z23*_theta2).map([&](float x, int, int){
-            return sigmoid(x);
-        });
-        p[i] = maxindex(z24[0], z24.col);
-
-    }
-    return Matrix<int>( p,m,1);
+    Matrix<float> X1(1.0f, X.row,1);
+    Matrix<float> X3 = (X1.rightlink(X)*_theta1).map([&](float x, int, int){return sigmoid(x);});
+    Matrix<float> X4(1.0f,X3.row,1);
+    Matrix<float> X5=(X4.rightlink(X3)*_theta2).map([&](float x, int, int){return sigmoid(x);});
+    for (int i = 0; i<X.row; i++) {p[i]=maxindex(X5[i], X5.col);}
+    return Matrix<int>(p,X.row,1);
 }
 
 
