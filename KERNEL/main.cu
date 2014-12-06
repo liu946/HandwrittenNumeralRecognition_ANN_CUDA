@@ -88,22 +88,15 @@ for(int iter=0;iter<num;iter++){
 /**
  * Host function that prepares data array and passes it to the CUDA kernel.
  */
+template <typename T = float>
+void initdata(char * filename, unsigned int size, T * p){
+    fstream file(filename,ios::in);
+    for (unsigned int i = 0; i<size; i++) {
+        file >> p[i];
+    }
+    file.close();
+}
 
-void initdatafloat(char * filename, unsigned int size, float * p){
-    fstream file(filename,ios::in);
-    for (unsigned int i = 0; i<size; i++) {
-        file >> p[i];
-    }
-    file.close();
-}
-void initdataint(char * filename, unsigned int size, int * p){
-    fstream file(filename,ios::in);
-    if(!file){return ;}
-    for (unsigned int i = 0; i<size; i++) {
-        file >> p[i];
-    }
-    file.close();
-}
 
 void inittheta(int len,float* p){
 	for(int i=0;i<len;i++){
@@ -119,7 +112,7 @@ void printtofile(char * filename,int len,int *ptr ){
     file.close();
 }
 int main(void) {
-	printf("fuck");
+
 	M  h_X, h_theta1, h_theta2,d_X, d_theta1,d_theta2,d_a3,d_a2;
 	h_X.ptr=new float[5000*400];h_X.row=5000;h_X.col=400;h_X.flag=0;
 	h_theta1.ptr=new float[401*25];h_theta1.row=401;h_theta1.col=25;h_theta1.flag=0;
@@ -128,8 +121,10 @@ int main(void) {
 	d_a2.ptr=0;d_a2.row=5000;d_a2.col=26;d_a2.flag=-1;
 	int * h_yptr,* d_yptr;
 
-	initdatafloat("Y.dat", 5000, h_yptr);
-    initdatafloat("X2.dat", h_X.row*h_X.col, h_X.ptr);
+	h_yptr=new int[5000];
+
+	initdata<int>("Y.dat", 5000, h_yptr);
+    initdata("X2.dat", h_X.row*h_X.col, h_X.ptr);
 
     inittheta(401*25,h_theta1.ptr);
     inittheta(26*10,h_theta2.ptr);
@@ -168,6 +163,5 @@ int main(void) {
     delete [] h_theta1.ptr;
     delete [] h_theta2.ptr;
     delete [] h_yptr;
-    cout<<"fuck";
 	return 0;
 }
