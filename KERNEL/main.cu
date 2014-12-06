@@ -13,7 +13,9 @@
 #include <fstream>
 #include <math.h>
 #include <string>
-#include <cutil_inline.h>
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+#include "cutil_inline.h"
 using namespace std;
 typedef struct Matrix{
 	float * ptr;
@@ -115,7 +117,7 @@ __global__ void predict(M Theta1, M Theta2, M X, M a2, M P){
 /**
  * Host function that prepares data array and passes it to the CUDA kernel.
  */
-template <typename T = float>
+template <typename T>
 void initdata(char * filename, unsigned int size, T * p){
     fstream file(filename,ios::in);
     for (unsigned int i = 0; i<size; i++) {
@@ -151,7 +153,7 @@ int main(void) {
 	h_yptr=new int[5000];
 
 	initdata<int>("Y.dat", 5000, h_yptr);
-    initdata("X2.dat", h_X.row*h_X.col, h_X.ptr);
+    initdata<float>("X2.dat", h_X.row*h_X.col, h_X.ptr);
 
     inittheta(401*25,h_theta1.ptr);
     inittheta(26*10,h_theta2.ptr);
