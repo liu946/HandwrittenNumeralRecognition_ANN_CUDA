@@ -85,6 +85,33 @@ for(int iter=0;iter<num;iter++){
 
 }
 
+//this function will ruin all of a2,X and P.
+//a2 should be a virtualized matrix!
+//results was placed in the first 5000 elements in a2
+__global__ void predict(M Theta1, M Theta2, M X, M a2, M P){
+	int gid = blockIdx.x*blockDim.x + threadIdx.x;
+	M a1 = X;
+	a1.flag=-1;a1.col++;
+	if(gid<5000*25){
+		a2.ptr[gid] = sigmoid(mul_(a1,Theta1,gid));
+	}
+	if(gid<5000*10){
+		//如果sigmoid函数单调，那这里进不进行这个运算应该无所谓 -ylxdzsw 2014.12.6
+		P.ptr[gid] = sigmoid(mul_(a2,Theta2,gid));
+	}
+	if(gid < 5000){
+		float temp;
+		float max = -1.0f;
+		for(int i=0;i<10;i++){
+			temp = P.ptr[gid*10+i];
+			if(temp>max){
+				max = temp;
+			}
+		}
+		a2.ptr[gid] = max;
+	}
+}
+
 /**
  * Host function that prepares data array and passes it to the CUDA kernel.
  */
