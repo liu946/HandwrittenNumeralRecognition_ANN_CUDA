@@ -31,21 +31,21 @@ typedef struct Matrix{
 __device__ float mul(M M1,M M2,int threadid){
 	float a=0.0f;
 	for(int i=0;i<(M1).col;i++){
-		a+=getitem( M1,threadid/M1.col,i)*getitem(M2,i,threadid%M2.row);
+		a+=getitem( M1,threadid/M2.col,i)*getitem(M2,i,threadid%M2.col);
 	}
 	return a;
 }
 __device__ float mul_(M M1,M M2,int threadid){
 	float a=0.0f;
 	for(int i=0;i<(M1).col;i++){
-		a+=getitem( M1,threadid/M1.col,i)*getitem(M2,threadid%M2.row,i);
+		a+=getitem( M1,threadid/(M2.row),i)*getitem(M2,threadid%M2.row,i);
 	}
 	return a;
 }
 __device__ float _mul(M M1,M M2,int threadid){
 	float a=0.0f;
 	for(int i=0;i<(M1).row;i++){
-		a+=getitem( M1,i,threadid/M1.col)*getitem(M2,i,threadid%M2.row);
+		a+=getitem( M1,i,threadid/M2.col)*getitem(M2,i,threadid%M2.col);
 	}
 	return a;
 }
