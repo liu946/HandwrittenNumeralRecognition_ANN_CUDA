@@ -26,7 +26,7 @@ typedef struct Matrix{
 
 
 
-#define getitem(M1,i,j) (((j)==0 && ((M1).flag)==-1)? 1:(M1).ptr[(i)*(M1.col)+(j)+(M1).flag])
+#define getitem(M1,i,j) (((j)==0 && ((M1).flag)==-1)? 1:(M1).ptr[(i)*(M1.col+(M1).flag)+(j)+(M1).flag])
 #define sigmoid(x) (1.0f/(1.0f+exp(-(x))))
 __device__ float mul(M M1,M M2,int threadid){
 	float a=0.0f;
