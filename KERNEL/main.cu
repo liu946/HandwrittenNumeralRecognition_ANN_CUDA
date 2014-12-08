@@ -63,7 +63,7 @@ __global__ void gradient(M theta1,M theta2,M X,int * Y,float lambda,M a2,M a3) {
 	}
 	__syncthreads();//在这里，又进行了一次map
 	if(gid<a3.row){
-		a3.ptr[gid*a3.col+Y[gid]]-=1;
+		a3.ptr[gid*a3.col+Y[gid]-1]-=1;
 	}
 	__syncthreads();
 	if(gid<theta2.row*theta2.col){
