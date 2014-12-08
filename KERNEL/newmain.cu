@@ -81,13 +81,19 @@ __global__ void nnCostFunction3(M theta1,M theta2,M X,int * Y,float lambda,M a2,
 		//if((gid*a3.col+Y[gid]-1)==4009)printf("%f",a3.ptr[gid*a3.col+Y[gid]-1]);
 	}
 }
+__global__ void theta2cpy(M theta2_temp,M theta2){
+	int gid =  (blockIdx.x*blockDim.x+threadIdx.x);
+	if(gid<theta2.row*theta2.col){
+		theta2_temp.ptr[gid]=theta2.ptr[gid];
+	}
+}
 __global__ void nnCostFunction4(M theta1,M theta2,M X,int * Y,float lambda,M a2,M a3) {
 	int gid =  (blockIdx.x*blockDim.x+threadIdx.x);
 	if(gid<theta2.row*theta2.col){
 		theta2.ptr[gid]-=(_mul(a3,a2,gid) + ((gid%theta2.col) ? (lambda*theta2.ptr[gid]) : 0.0f))/(float)X.row;
 	}
 }
-__global__ void nnCostFunction5(M theta1,M theta2,M X,int * Y,float lambda,M a2,M a3) {
+__global__ void nnCostFunction5(M theta1,M theta2_t,M X,int * Y,float lambda,M a2,M a3) {
 //	if(gid==0){
 //	for(int i = 0;i<5;i++){
 //		for(int j=0;j<5;j++){
@@ -99,10 +105,11 @@ __global__ void nnCostFunction5(M theta1,M theta2,M X,int * Y,float lambda,M a2,
 ////	//~debug
 	int gid =  (blockIdx.x*blockDim.x+threadIdx.x);
 	a2.col--;a2.flag=0;
-	M theta2_1=theta2;theta2_1.col--;theta2_1.flag=1;
+	M theta2_1=theta2_t;theta2_1.col--;theta2_1.flag=1;
 	if(gid<a2.row*a2.col){
 		float temp = a2.ptr[gid];
 		a2.ptr[gid]=(mul(a3,theta2_1,gid)*temp*(1-temp));
+		//if(gid==0)printf("theta2_1(%d,%d)[%d]:%f\n\n\n",0,0,index(theta2_1,0,0),getitem(theta2_1,0,0));
 	}
 }
 __global__ void nnCostFunction6(M theta1,M theta2,M X,int * Y,float lambda,M a2,M a3) {
@@ -110,7 +117,14 @@ __global__ void nnCostFunction6(M theta1,M theta2,M X,int * Y,float lambda,M a2,
 	M a1 = X;a1.col++;a1.flag=-1;
 	a2.col--;a2.flag=0;
 	if(gid<theta1.col*theta1.row){
-		theta1.ptr[gid]-=(_mul(a2,a1,gid)+(gid%theta1.row)?(lambda*theta1.ptr[gid]):0.0f)/(float)X.row;
+		if(gid==0){
+			float ta=_mul(a2,a1,gid);
+			float tb=((gid%theta1.col)?(lambda*theta1.ptr[gid]):0.0f);
+
+			//printf("ta%f tb%f (ta+0)(%f) \n\n\n",ta,tb,((_mul(a2,a1,gid)+((gid%theta1.col)?(lambda*theta1.ptr[gid]):0.0f))/X.row));
+		}
+
+		theta1.ptr[gid]-=((_mul(a2,a1,gid)+((gid%theta1.col)?(lambda*theta1.ptr[gid]):0.0f))/X.row);
 	}
 }
 __global__ void printM(M MM,int a,int b){
@@ -136,7 +150,7 @@ void initdata(char * filename, unsigned int size, T * p){
 
 void inittheta(int len,float* p){
 	for(int i=0;i<len;i++){
-		p[i]=0.12f;//*(((float)(rand()%1000))/1000.0f*2-1);
+		p[i]=0.12f*(((float)(rand()%1000))/1000.0f*2-1);
 	}
 }
 void printtofile(char * filename,int len,int *ptr ){
@@ -155,7 +169,7 @@ void printtofile(char * filename,int len,float *ptr ){
 }
 int main(void) {
 
-	M  h_X, h_theta1, h_theta2,d_X, d_theta1,d_theta2,d_a3,d_a2;
+	M  h_X, h_theta1, h_theta2,d_X, d_theta1,d_theta2,d_a3,d_a2,d_theta2_temp;
 	h_X.ptr=new float[5000*400];h_X.row=5000;h_X.col=400;h_X.flag=0;
 	h_theta1.ptr=new float[401*25];h_theta1.row=25;h_theta1.col=401;h_theta1.flag=0;
 	h_theta2.ptr= new float[26*10];h_theta2.row=10;h_theta2.col=26;h_theta2.flag=0;
@@ -172,11 +186,13 @@ int main(void) {
     inittheta(26*10,h_theta2.ptr);
 
     elapsed_time(&timer);
-    d_X=h_X;d_theta1=h_theta1;d_theta2=h_theta2;
+    d_X=h_X;d_theta1=h_theta1;d_theta2=h_theta2;d_theta2_temp=h_theta2;
+
     cudaSafeCall(cudaMalloc((void**) &d_X.ptr, sizeof(float) *d_X.col*d_X.row ));
     cudaSafeCall(cudaMalloc((void**) &d_yptr, sizeof(int) *5000 ));
     cudaSafeCall(cudaMalloc((void**) &d_theta1.ptr, sizeof(float) *d_theta1.col*d_theta1.row ));
     cudaSafeCall(cudaMalloc((void**) &d_theta2.ptr, sizeof(float) *d_theta2.col*d_theta2.row ));
+    cudaSafeCall(cudaMalloc((void**) &d_theta2_temp.ptr, sizeof(float) *d_theta2.col*d_theta2.row ));
     cudaSafeCall(cudaMalloc((void**) &d_a2.ptr, sizeof(float) *5000*25 ));
     cudaSafeCall(cudaMalloc((void**) &d_a3.ptr, sizeof(float) *d_a3.col*d_a3.row ));
 
@@ -185,21 +201,16 @@ int main(void) {
     cudaSafeCall(cudaMemcpy(d_theta1.ptr, h_theta1.ptr, sizeof(float)*d_theta1.col*d_theta1.row,cudaMemcpyHostToDevice));
     cudaSafeCall(cudaMemcpy(d_theta2.ptr, h_theta2.ptr, sizeof(float)*d_theta2.col*d_theta2.row,cudaMemcpyHostToDevice));
     elapsedcp = elapsed_time(&timer);
-    int cycle=1;
-  //for(int i=cycle;i>0;i--){
+    int cycle=100;
+    for(int i=cycle;i>0;i--){
     	nnCostFunction1<<<5000*25/1024+1,1024>>>(d_theta1,d_theta2,d_X,d_yptr,1.0f,d_a2,d_a3);
-
     	nnCostFunction2<<<5000*25/1024+1,1024>>>(d_theta1,d_theta2,d_X,d_yptr,1.0f,d_a2,d_a3);
-
     	nnCostFunction3<<<5000*25/1024+1,1024>>>(d_theta1,d_theta2,d_X,d_yptr,1.0f,d_a2,d_a3);
+    	theta2cpy<<<1,260>>>(d_theta2_temp,d_theta2);
     	nnCostFunction4<<<5000*25/1024+1,1024>>>(d_theta1,d_theta2,d_X,d_yptr,1.0f,d_a2,d_a3);
-
-    	nnCostFunction5<<<5000*25/1024+1,1024>>>(d_theta1,d_theta2,d_X,d_yptr,1.0f,d_a2,d_a3);
-
+    	nnCostFunction5<<<5000*25/1024+1,1024>>>(d_theta1,d_theta2_temp,d_X,d_yptr,1.0f,d_a2,d_a3);
     	nnCostFunction6<<<5000*25/1024+1,1024>>>(d_theta1,d_theta2,d_X,d_yptr,1.0f,d_a2,d_a3);
-    	printM<<<1,1>>>(d_theta2,0,0);
-    	printM<<<1,1>>>(d_theta1,0,0);
-   // }
+   }
     elapsed = elapsed_time(&timer);
     cudaSafeCall(cudaThreadSynchronize());	// Wait for the GPU launched work to complete
     cudaSafeCall(cudaGetLastError());
@@ -213,6 +224,7 @@ int main(void) {
     cudaSafeCall(cudaFree(d_X.ptr));
     cudaSafeCall(cudaFree(d_theta1.ptr));
     cudaSafeCall(cudaFree(d_theta2.ptr));
+    cudaSafeCall(cudaFree(d_theta2_temp.ptr));
     cudaSafeCall(cudaFree(d_a2.ptr));
     cudaSafeCall(cudaFree(d_a3.ptr));
     cudaSafeCall(cudaFree(d_yptr));
