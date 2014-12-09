@@ -21,9 +21,159 @@
 
 3. 核功能函数设计
 	- 
-	
+
 4. 核过程函数设计
-	- 由于需要全局同步，我们将每次循环的过程分成了6个阶段，每个阶段之间需要退回host端保证全局同步。我们设计的6个核过程函数如下。
+	- 由于需要全局同步，我们将每次迭代的过程分成了7个阶段，每个阶段之间需要退回host端保证全局同步。我们设计的7个核过程函数如下。
+		1. 计算a2
+
+			- 伪代码
+
+			```
+			a1 = [ones(m, 1) X];
+			z2 = a1*Theta1';
+			a2 = sigmoid(z2);
+			```
+
+			- GPU实现(主要部分)
+
+			```
+			int gid =  (blockIdx.x*blockDim.x+threadIdx.x);
+			M a1 = X;a1.col++;a1.flag=-1;
+
+			if(gid<(a2.col-1)*a2.row){
+				a2.ptr[gid] = sigmoid(mul_(a1,theta1,gid));
+			}
+			```
+
+		2. 计算a3
+
+			- 伪代码
+
+			```
+			a2 = [ones(size(a2,1), 1) a2];
+			z3 = a2 *Theta2';
+			a3 = sigmoid(z3);
+			```
+			- GPU实现(主要部分)
+
+			```
+			int gid =  (blockIdx.x*blockDim.x+threadIdx.x);
+			if(gid<(a3.col)*a3.row){
+				a3.ptr[gid] = sigmoid(mul_(a2,theta2,gid));
+				//if(!(gid%1000))printf("%d,%f\n\n",gid,a3.ptr[gid]);
+
+			}
+			```
+
+		3. 计算d3
+
+			- 伪代码
+
+			```
+			d3 = a3 - y_matrix;
+			```
+			
+			- GPU实现(主要部分)
+
+			```
+			int gid =  (blockIdx.x*blockDim.x+threadIdx.x);
+			//在这里，又进行了一次map
+			if(gid<a3.row){
+				a3.ptr[gid*a3.col+Y[gid]-1]-=1;
+				//if((gid*a3.col+Y[gid]-1)==4009)printf("%f",a3.ptr[gid*a3.col+Y[gid]-1]);
+			}
+			```
+
+		4. 复制Theta2
+
+			- 伪代码
+
+			```
+			Theta2_tmep = Theta2
+			```
+
+			- GPU实现(主要部分)
+
+			```
+			int gid =  (blockIdx.x*blockDim.x+threadIdx.x);
+			if(gid<theta2.row*theta2.col){
+				theta2_temp.ptr[gid]=theta2.ptr[gid];
+			}
+			```
+
+		5. Theta2 descent
+
+			- 伪代码
+
+			```
+			delta2 = d3'*a2;
+			Theta2_grad = delta2*(1/m);
+			reg2 = (lambda/m) * Theta2;
+			reg2(:,1)= 0;
+			Theta2_grad = Theta2_grad + reg2;
+			Theta2 -= Theta2_grad
+			```
+
+			- GPU实现(主要部分)
+
+			```
+			int gid =  (blockIdx.x*blockDim.x+threadIdx.x);
+			if(gid<theta2.row*theta2.col){
+				theta2.ptr[gid]-=(_mul(a3,a2,gid) + ((gid%theta2.col) ? (lambda*theta2.ptr[gid]) : 0.0f))/(float)X.row;
+			}
+			```
+
+		6. d2的计算
+
+			- 伪代码
+
+			```
+			d2 = (d3*(Theta2(:,2:end))).* (sigmoidGradient(z2));
+			```
+
+			- GPU实现(主要部分)
+
+			```
+			int gid =  (blockIdx.x*blockDim.x+threadIdx.x);
+			a2.col--;a2.flag=0;
+			M theta2_1=theta2_t;theta2_1.col--;theta2_1.flag=1;
+			if(gid<a2.row*a2.col){
+				float temp = a2.ptr[gid];
+				a2.ptr[gid]=(mul(a3,theta2_1,gid)*temp*(1-temp));
+				//if(gid==0)printf("theta2_1(%d,%d)[%d]:%f\n\n\n",0,0,index(theta2_1,0,0),getitem(theta2_1,0,0));
+			}
+			```
+
+		7. d2的计算
+
+			- 伪代码
+
+			```
+			delta1 = d2'*a1;
+			Theta1_grad = delta1*(1/m);
+			reg1 = (lambda/m) * Theta1;
+			reg1(:,1)= 0;
+			Theta1_grad = Theta1_grad + reg1;
+			Theta1 -= Theta1_grad
+			```
+
+			- GPU实现(主要部分)
+
+			```
+			int gid =  (blockIdx.x*blockDim.x+threadIdx.x);
+			M a1 = X;a1.col++;a1.flag=-1;
+			a2.col--;a2.flag=0;
+			if(gid<theta1.col*theta1.row){
+				if(gid==0){
+					float ta=_mul(a2,a1,gid);
+					float tb=((gid%theta1.col)?(lambda*theta1.ptr[gid]):0.0f);
+
+					//printf("ta%f tb%f (ta+0)(%f) \n\n\n",ta,tb,((_mul(a2,a1,gid)+((gid%theta1.col)?(lambda*theta1.ptr[gid]):0.0f))/X.row));
+				}
+
+				theta1.ptr[gid]-=((_mul(a2,a1,gid)+((gid%theta1.col)?(lambda*theta1.ptr[gid]):0.0f))/X.row);
+			}
+			```
 
 5. host主函数设计 
 
