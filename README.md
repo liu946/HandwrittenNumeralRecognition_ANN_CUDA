@@ -47,3 +47,9 @@ Handwritten numeral recognition project using BP ANN with CPU &amp; GPU (CUDA).
 	* Matrix(T data,int _row,int _col) 初始化一个全为data的矩阵
 		- `配合拼接方法可以快速加行列`
 	* Matrix(int _row,int _col) 构造一个没有初始化过的矩阵
+	
+	
+* 结题报告主要分成4个部分写，我已经基本写完一个部分了，最后一个部分是展示，md写有点问题，之后腾到word上的时候再弄。
+	* 第一部分我们其实开题的时候有了，再简单写一下，主要是描述，代码可以穿插。
+	* 第二部分有些与第三部分重合，第二部分需要写的我已经列好了副标题，大概就是那些了。
+	* 第三部分基本写好，想增加可以再增加。
